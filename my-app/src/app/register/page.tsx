@@ -2,12 +2,13 @@
 import React, { useEffect, useState } from "react";
 // import dbConnect from "@/lib/dbConnect";
 // import { getUsers } from "@/lib/services/users";
-import { redirect, useRouter } from "next/navigation";
+// import { redirect } from "next/navigation";
 import { login, selectUserToken } from "../../../store/slices/userSlice";
 import { UserState } from "../../../store/slices/types";
 import { useAppDispatch, useAppSelector } from "../../../store/store";
 import useSWRMutation from "swr/mutation";
 import { postRequest } from "../../pages/api/hello";
+import { redirect } from "next/navigation";
 
 interface props {
   user: UserState;
@@ -32,9 +33,8 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
-  const router = useRouter();
   const dispatch = useAppDispatch();
-  if (!token) redirect("/login");
+  // if (!token) redirect("/login");
   const validate = () => {
     const newErrors: FormErrors = {};
     if (!fullName) {
@@ -61,7 +61,7 @@ function Register() {
 
       if (jsonRes.success) {
         dispatch(login({ emailFromRegister: email }));
-        router.push("/login");
+        // router.push("/login");
       }
       if (jsonRes.error) setErrors({ server: jsonRes.error });
       //   console.log("data", data1.data);

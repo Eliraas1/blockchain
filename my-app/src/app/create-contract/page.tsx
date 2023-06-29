@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { postRequest } from "../../pages/api/hello";
 import React, { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/store";
@@ -17,7 +17,7 @@ interface FormErrors {
   server?: string;
 }
 export default function CreateContract() {
-  const router = useRouter();
+  // const router = useRouter();
   const token = useAppSelector(selectUserToken);
   const user = useAppSelector(selectUser);
   const dispatch = useAppDispatch();

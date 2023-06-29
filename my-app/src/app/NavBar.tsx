@@ -4,14 +4,14 @@ import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/store";
 import { logout, selectUserToken } from "../../store/slices/userSlice";
 import useSWRMutation from "swr/mutation";
-import { redirect, useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import { postRequest } from "../pages/api/hello";
 import { Button, Navbar } from "flowbite-react";
 import { animateCSS, toggleAnimate } from "./SideBar";
 import Notifications from "./Components/Notifications";
 
 function NavBar() {
-  const router = useRouter();
+  // const router = useRouter();
   const token = useAppSelector(selectUserToken);
   const [isSignIn, setIsSignIn] = useState(true);
   const [animate, setAnimate] = useState(true);
@@ -44,11 +44,11 @@ function NavBar() {
     }
   };
 
-  useEffect(() => {
-    if (!isSignIn) {
-      router.push("/login");
-    }
-  }, [isSignIn]);
+  // useEffect(() => {
+  //   if (!isSignIn) {
+  //     router.push("/login");
+  //   }
+  // }, [isSignIn]);
   useEffect(() => {
     if (token) setIsSignIn(true);
     else setIsSignIn(false);

@@ -1,5 +1,5 @@
 "use client";
-import { redirect, useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import { postRequest } from "../../../pages/api/hello";
 import React, { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../store/store";
@@ -30,7 +30,6 @@ type props = {
   params: { cid: string };
 };
 export default function EditContract({ params: { cid } }: props) {
-  const router = useRouter();
   const token = useAppSelector(selectUserToken);
   const user = useAppSelector(selectUser);
   const contract = useAppSelector(selectContracts);
@@ -107,7 +106,7 @@ export default function EditContract({ params: { cid } }: props) {
           setMessage(`Contract of ${carBrand.current} Successfully Deleted!`)
         );
         setStartDate(new Date());
-        router.back();
+        // router.back();
       } else {
         // console.log(jsonRes.error);
         setErrors({ server: jsonRes.error });

@@ -5,8 +5,7 @@ import React, { useEffect, useState } from "react";
 // import { Inter } from "@next/font/google";
 // import dbConnect from "@/lib/dbConnect";
 // import { getUsers } from "@/lib/services/users";
-// import { useRouter } from "next/navigation";
-import { redirect, useRouter } from "next/navigation";
+// import { redirect } from "next/navigation";
 import {
   login,
   selectEmailFromRegister,
@@ -17,6 +16,7 @@ import { useAppDispatch, useAppSelector } from "../../../store/store";
 import useSWRMutation from "swr/mutation";
 import { json } from "node:stream/consumers";
 import { postRequest } from "../../pages/api/hello";
+import { redirect } from "next/navigation";
 
 interface props {
   users: UserType;
@@ -27,9 +27,9 @@ interface FormErrors {
   server?: string;
 }
 function Login() {
-  // const router = useRouter();
   const token = useAppSelector(selectUserToken);
   if (token) redirect("/");
+  // console.log({ token });
   const dispatch = useAppDispatch();
   const emailFromRegister = useAppSelector(selectEmailFromRegister);
   const [email, setEmail] = useState(
@@ -44,7 +44,7 @@ function Login() {
     isMutating,
   } = useSWRMutation("/api/auth/signin", postRequest);
   //   console.log("asdasdasd", token);
-  if (!token) redirect("/login");
+  // if (!token) redirect("/login");
   const validate = () => {
     const newErrors: FormErrors = {};
 

@@ -2,7 +2,7 @@
 import "../styles/globals.css";
 import { UserType } from "../Models/User";
 import React, { useEffect, useState } from "react";
-import { redirect, useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import {
   selectContracts,
   selectUser,
@@ -27,15 +27,11 @@ function Home() {
   // console.log(await res.json());
   // console.log(res);
 
-  const router = useRouter();
   const token = useAppSelector(selectUserToken);
   if (!token) redirect("/login");
   const user = useAppSelector(selectUser);
   const contracts = useAppSelector(selectContracts);
-  // useEffect(() => {
-  //   token ? router.push("/") : router.push("/login");
-  //   // if (!isSignIn) redirect("/login");
-  // }, [token]);
+
   return (
     <div className="w-full  flex justify-center">
       <div className="h-[32rem] w-[93vw]  max-w-6xl mx-2    py-10  ">

@@ -19,7 +19,6 @@ export default function RootLayout({
     <Image
       id="myContainer"
       className="-z-20 animate-[blur_3s_ease-in-out_both] "
-      // width={900}
       objectFit="cover"
       style={{
         aspectRatio: 1 / 2,
@@ -38,11 +37,11 @@ export default function RootLayout({
   );
 
   return (
-    <Providers>
-      <html className={inter.className}>
-        <head />
+    <html className={inter.className}>
+      <head />
 
-        <body className="bg-gray-600 h-[100%] ">
+      <body className="bg-gray-600 h-[100%] ">
+        <Providers>
           <header className="">
             <Bgc />
             {/* <Alert color="info">Alert!</Alert> */}
@@ -54,8 +53,8 @@ export default function RootLayout({
             </div>
           </div> */}
           <div className="h-[92vh]  ">{children}</div>
-        </body>
-      </html>
-    </Providers>
+        </Providers>
+      </body>
+    </html>
   );
 }
