@@ -13,6 +13,13 @@ import moment from "moment";
 import Link from "next/link";
 import { Tabs } from "flowbite-react";
 import ContractList from "./Components/ContractList";
+import { useContract, useContractRead } from "@thirdweb-dev/react";
+import nextConfig from "../../next.config";
+// import ".env.local"
+// const WALLET_ID = process.env["WALLET_ID"];
+const WALLET_ID = process.env.NEXT_PUBLIC_WALLET_ID;
+// const dada = nextConfig.env?.API_KEY;
+// const dada = nextConfig.env?.API_KEY;
 interface props {
   users: UserType;
 }
@@ -21,17 +28,15 @@ interface FormErrors {
   password?: string;
 }
 function Home() {
-  // await dbConnect();
-  // const users = await getUsers();
-  // const res = await fetch("http://localhost:3000/api/users");
-  // console.log(await res.json());
-  // console.log(res);
-
   const token = useAppSelector(selectUserToken);
   if (!token) redirect("/login");
   const user = useAppSelector(selectUser);
   const contracts = useAppSelector(selectContracts);
-
+  const { contract, data, isLoading } = useContract(WALLET_ID);
+  const { data: contractData } = useContractRead(contract, "carSales", [1]);
+  // // }
+  // // contract?.abi.
+  console.log({ contractData: contractData });
   return (
     <div className="w-full  flex justify-center">
       <div className="h-[32rem] w-[93vw]  max-w-6xl mx-2    py-10  ">

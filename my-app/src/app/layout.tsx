@@ -4,11 +4,9 @@ import { Montserrat } from "next/font/google";
 import "./globals.css";
 import "animate.css";
 import NavBar from "./NavBar";
-// import { Providers } from "./provider";
 import SideBar from "./SideBar";
 import Image from "next/image";
 import Providers from "./Provider";
-import { Alert } from "flowbite-react";
 const inter = Montserrat({ subsets: ["latin"], weight: "600" });
 export default function RootLayout({
   children,
@@ -52,6 +50,7 @@ export default function RootLayout({
             <div className="h-screen absolute -z-10">
             </div>
           </div> */}
+
           <div className="h-[92vh]  ">{children}</div>
         </Providers>
       </body>

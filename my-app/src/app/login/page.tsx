@@ -28,8 +28,9 @@ interface FormErrors {
 }
 function Login() {
   const token = useAppSelector(selectUserToken);
+  console.log({ token });
   if (token) redirect("/");
-  // console.log({ token });
+
   const dispatch = useAppDispatch();
   const emailFromRegister = useAppSelector(selectEmailFromRegister);
   const [email, setEmail] = useState(
