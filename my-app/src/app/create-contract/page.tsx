@@ -9,6 +9,12 @@ import "react-datepicker/dist/react-datepicker.css";
 import { selectUser, selectUserToken } from "../../../store/slices/userSlice";
 import { carBrands } from "../../constants";
 import { Toast } from "flowbite-react";
+import {
+  useContract,
+  useContractWrite,
+  useMetamask,
+} from "@thirdweb-dev/react";
+const WALLET_ID = process.env.NEXT_PUBLIC_WALLET_ID;
 
 interface FormErrors {
   email?: string;
@@ -17,7 +23,9 @@ interface FormErrors {
   server?: string;
 }
 export default function CreateContract() {
-  // const router = useRouter();
+  const { contract, isLoading } = useContract(WALLET_ID);
+  const { mutateAsync: createSale } = useContractWrite(contract, "createSale");
+  const connectWallet = useMetamask();
   const token = useAppSelector(selectUserToken);
   const user = useAppSelector(selectUser);
   const dispatch = useAppDispatch();
@@ -54,6 +62,12 @@ export default function CreateContract() {
 
     return Object.keys(newErrors).length === 0;
   };
+  function convertToUint(value: number) {
+    const factor = 10 ** 18; // Adjust the factor based on the desired precision (e.g., 10^18 for 18 decimal places)
+    const uintValue = value * factor;
+
+    return uintValue.toString();
+  }
   const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     try {
