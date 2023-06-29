@@ -43,12 +43,12 @@ export default function RootLayout({
         <head />
 
         <body className="bg-gray-600 h-[100%] ">
-          {/* <header className=""> */}
-          {/* <Bgc /> */}
-          {/* <Alert color="info">Alert!</Alert> */}
-          {/* <NavBar /> */}
-          {/* </header> */}
-          {/* <SideBar /> */}
+          <header className="">
+            <Bgc />
+            {/* <Alert color="info">Alert!</Alert> */}
+            <NavBar />
+          </header>
+          <SideBar />
           {/* <div className="h-screen grid place-content-center">
             <div className="h-screen absolute -z-10">
             </div>

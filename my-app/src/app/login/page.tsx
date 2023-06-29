@@ -5,8 +5,8 @@ import React, { useEffect, useState } from "react";
 // import { Inter } from "@next/font/google";
 // import dbConnect from "@/lib/dbConnect";
 // import { getUsers } from "@/lib/services/users";
-import { useRouter } from "next/navigation";
-import { redirect } from "next/navigation";
+// import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import {
   login,
   selectEmailFromRegister,
@@ -27,7 +27,7 @@ interface FormErrors {
   server?: string;
 }
 function Login() {
-  const router = useRouter();
+  // const router = useRouter();
   const token = useAppSelector(selectUserToken);
   if (token) redirect("/");
   const dispatch = useAppDispatch();
@@ -44,7 +44,7 @@ function Login() {
     isMutating,
   } = useSWRMutation("/api/auth/signin", postRequest);
   //   console.log("asdasdasd", token);
-  //   if (!token) redirect("/login");
+  if (!token) redirect("/login");
   const validate = () => {
     const newErrors: FormErrors = {};
 
@@ -82,12 +82,12 @@ function Login() {
     }
     // perform authentication here
   };
-  useEffect(() => {}, [email, password]);
-  useEffect(() => {
-    if (token) {
-      router.push("/");
-    }
-  }, [token]);
+  // useEffect(() => {}, [email, password]);
+  // useEffect(() => {
+  //   if (token) {
+  //     router.push("/");
+  //   }
+  // }, [token]);
 
   return (
     <div className="h-[32rem] opacity-[0.93]  grid place-content-center  ">

@@ -32,10 +32,10 @@ function Home() {
   if (!token) redirect("/login");
   const user = useAppSelector(selectUser);
   const contracts = useAppSelector(selectContracts);
-  useEffect(() => {
-    token ? router.push("/") : router.push("/login");
-    // if (!isSignIn) redirect("/login");
-  }, [token]);
+  // useEffect(() => {
+  //   token ? router.push("/") : router.push("/login");
+  //   // if (!isSignIn) redirect("/login");
+  // }, [token]);
   return (
     <div className="w-full  flex justify-center">
       <div className="h-[32rem] w-[93vw]  max-w-6xl mx-2    py-10  ">

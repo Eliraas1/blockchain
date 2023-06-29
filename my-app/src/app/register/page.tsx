@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 // import dbConnect from "@/lib/dbConnect";
 // import { getUsers } from "@/lib/services/users";
-// import { useRouter } from "next/router";
 import { redirect, useRouter } from "next/navigation";
 import { login, selectUserToken } from "../../../store/slices/userSlice";
 import { UserState } from "../../../store/slices/types";
@@ -35,10 +34,7 @@ function Register() {
   const [errors, setErrors] = useState<FormErrors>({});
   const router = useRouter();
   const dispatch = useAppDispatch();
-  // const router = useRouter();
-  //   const token = useAppSelector(selectUserToken);
-  //   console.log("asdasdasd", token);
-  //   if (!token) redirect("/login");
+  if (!token) redirect("/login");
   const validate = () => {
     const newErrors: FormErrors = {};
     if (!fullName) {
