@@ -54,7 +54,7 @@ export default function EditContract({ params: { cid } }: props) {
 
       carBrand.current = cont?.carBrand || "";
     }
-  }, [contract?.sending.length]);
+  }, [contract?.sending.length, cid,contract?.sending]);
   useEffect(() => {
     return () => {
       clearTimeout(timer);
@@ -287,7 +287,7 @@ export default function EditContract({ params: { cid } }: props) {
                           htmlFor="email-address"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Seller's email address
+                          Seller&apos;s email address
                         </label>
                         <input
                           type="text"
@@ -307,7 +307,7 @@ export default function EditContract({ params: { cid } }: props) {
                           htmlFor="email-address"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Buyer's email address
+                          Buyer&apos;s email address
                         </label>
                         <input
                           type="text"

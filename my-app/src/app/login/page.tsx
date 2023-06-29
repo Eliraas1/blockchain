@@ -17,7 +17,7 @@ import useSWRMutation from "swr/mutation";
 import { json } from "node:stream/consumers";
 import { postRequest } from "../../pages/api/hello";
 import { redirect } from "next/navigation";
-
+import Image from "next/image";
 interface props {
   users: UserType;
 }
