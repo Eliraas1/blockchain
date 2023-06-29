@@ -9,6 +9,7 @@ import {
 } from "../../store/slices/userSlice";
 import { ContractState } from "../../store/slices/types";
 import LoadingSpinner from "./Components/LoadingSpinner";
+import { useAddress, useMetamask } from "@thirdweb-dev/react";
 const ContractElement = ({
   txt,
   pending,
@@ -116,17 +117,28 @@ export const fetcher = async (url: string) =>
 export default function SideBar() {
   const [signIn, setIsSignIn] = useState(false);
   const token = useAppSelector(selectUserToken);
-  useEffect(() => {
-    if (token) {
-      setIsSignIn(true);
-    } else setIsSignIn(false);
-  }, [token]);
-  if (!signIn) return null;
+  // const address = useAddress();
+  // const connectWallet = useMetamask();
+  // const connect = async () => {
+  //   await connectWallet();
+  // };
+  // useEffect(() => {
+  //   console.log({ address });
+  //   if (!address) {
+  //     connect();
+  //   }
+  // }, [address]);
+  // useEffect(() => {
+  //   if (token) {
+  //     setIsSignIn(true);
+  //   } else setIsSignIn(false);
+  // }, [token]);
+  if (!token) return <></>;
   return <RealSideBar />;
 }
 export function RealSideBar() {
   const { data, error, isLoading } = useSWR("/api/contract/getMy", fetcher, {
-    refreshInterval: 10000,
+    // refreshInterval: 10000,
   });
   const dispatch = useAppDispatch();
   const [mySendingContracts, setMySendingContracts] = useState([]);
@@ -163,6 +175,7 @@ export function RealSideBar() {
   useEffect(() => {
     animateCSS("aside", "fadeInLeft");
   }, []);
+
   useEffect(() => {
     if (data) {
       if (data.status == 401) {
@@ -177,7 +190,7 @@ export function RealSideBar() {
       setMySendingContracts(data.data?.mySendingContracts);
       setMyReceiveContractsContracts(data.data?.myReceiveContracts);
     }
-  }, [data, error]);
+  }, [data, error, dispatch]);
 
   return (
     <aside

@@ -9,7 +9,7 @@ import { postRequest } from "../pages/api/hello";
 import { Button, Navbar } from "flowbite-react";
 import { animateCSS, toggleAnimate } from "./SideBar";
 import Notifications from "./Components/Notifications";
-
+import Image from "next/image";
 function NavBar() {
   // const router = useRouter();
   const token = useAppSelector(selectUserToken);
@@ -49,10 +49,10 @@ function NavBar() {
   //     router.push("/login");
   //   }
   // }, [isSignIn]);
-  useEffect(() => {
-    if (token) setIsSignIn(true);
-    else setIsSignIn(false);
-  }, [token]);
+  // useEffect(() => {
+  //   if (token) setIsSignIn(true);
+  //   else setIsSignIn(false);
+  // }, [token]);
   const openSideBar = () => {
     // dispatch(toggleSideBar());
   };
@@ -73,7 +73,7 @@ function NavBar() {
           </span> */}
         </Navbar.Brand>
         <div className="flex md:order-2  ">
-          {isSignIn && (
+          {token && (
             <div className="flex md:w-[12vw] lg:w-[15vw] xl:w-[20vw] 2xl:w-[20vw] items-center justify-start">
               <Notifications />
             </div>
@@ -89,7 +89,7 @@ function NavBar() {
             Home
           </Link>
           {/* </Navbar.Link> */}
-          {!isSignIn ? (
+          {!token ? (
             <>
               {/* <Navbar.Link className="hover:bg-slate-600"> */}
               <Link

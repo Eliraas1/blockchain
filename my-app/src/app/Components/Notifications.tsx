@@ -12,7 +12,7 @@ function Notifications() {
     "/api/contract/getMyPending",
     fetcher,
     {
-      refreshInterval: 10000,
+      // refreshInterval: 10000,
     }
   );
   const {

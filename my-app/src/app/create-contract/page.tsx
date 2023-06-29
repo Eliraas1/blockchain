@@ -1,7 +1,7 @@
 "use client";
 // import { useRouter } from "next/navigation";
 import { postRequest } from "../../pages/api/hello";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/store";
 import useSWRMutation from "swr/mutation";
 import DatePicker from "react-datepicker";
@@ -9,24 +9,40 @@ import "react-datepicker/dist/react-datepicker.css";
 import { selectUser, selectUserToken } from "../../../store/slices/userSlice";
 import { carBrands } from "../../constants";
 import { Toast } from "flowbite-react";
+import { v4 } from "uuid";
+
 import {
+  useAddress,
   useContract,
+  useContractRead,
   useContractWrite,
   useMetamask,
 } from "@thirdweb-dev/react";
-const WALLET_ID = process.env.NEXT_PUBLIC_WALLET_ID;
-
+import toast from "react-hot-toast";
 interface FormErrors {
   email?: string;
   carBrand?: string;
   expiration?: string;
   server?: string;
 }
+const WALLET_ID = process.env.NEXT_PUBLIC_WALLET_ID;
 export default function CreateContract() {
-  const { contract, isLoading } = useContract(WALLET_ID);
-  const { mutateAsync: createSale } = useContractWrite(contract, "createSale");
+  // const router = useRouter();
+
+  const { contract } = useContract(WALLET_ID);
+  const { data: contractData } = useContractRead(contract, "carSales", [1]);
+
+  const address = useAddress();
   const connectWallet = useMetamask();
+
+  const {
+    mutateAsync: createContract,
+    isLoading: createContractLoading,
+    error: createContractErr,
+  } = useContractWrite(contract, "createSale");
+
   const token = useAppSelector(selectUserToken);
+
   const user = useAppSelector(selectUser);
   const dispatch = useAppDispatch();
   const [email, setEmail] = useState("");
@@ -70,6 +86,17 @@ export default function CreateContract() {
   }
   const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
+    if (!address) await connectWallet();
+    console.log(email, sellerEmail);
+    const ss = await createContract({
+      args: [
+        "0xa509def675E9FD6914FFE7E52bAfFC675B5e665C",
+        "0xa509def675E9FD6914FFE7E52bAfFC675B5e665C",
+        1,
+      ],
+    });
+    console.log(ss.receipt);
+    return;
     try {
       console.log(carBrand.current);
       const res = await CreateContract({
@@ -145,7 +172,7 @@ export default function CreateContract() {
       <div className="relative">
         <input
           ref={inputRef}
-          className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+          className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-500"
           type="text"
           placeholder="Search for a car brand"
           value={q.current}
@@ -166,7 +193,7 @@ export default function CreateContract() {
                     optionRefs.current[index] = ref;
                   }}
                   key={option}
-                  className="px-4 py-2 z-30 hover:bg-gray-100 "
+                  className="px-4 py-2 z-30 hover:bg-gray-100 text-gray-500 bg-yellow-100 "
                   onClick={(event) => {
                     setIsOptionClicked(true);
                     handleOptionClick(option);
@@ -228,19 +255,19 @@ export default function CreateContract() {
                           htmlFor="email-address"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Seller's email address
+                          Seller&apos;s email address
                         </label>
                         <input
                           type="text"
                           // value={sellerEmail}
                           placeholder={sellerEmail}
-                          disabled={true}
+                          disabled={false}
                           onChange={(event) => {
-                            setEmail(event.target.value), validate();
+                            setSellerEmail(event.target.value), validate();
                           }}
                           name="email-address"
                           id="email-address"
-                          className="mt-1 bg-gray-50 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                          className="mt-1 bg-gray-50 text-gray-500 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                         />
                       </div>
                       <div className="col-span-6 sm:col-span-4">
@@ -248,7 +275,7 @@ export default function CreateContract() {
                           htmlFor="email-address"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Buyer's email address
+                          Buyer&apos;s email address
                         </label>
                         <input
                           type="text"
@@ -261,7 +288,7 @@ export default function CreateContract() {
                           name="email-address"
                           id="email-address"
                           autoComplete="email"
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                          className="mt-1 block w-full text-gray-500 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                         />
                       </div>
 
