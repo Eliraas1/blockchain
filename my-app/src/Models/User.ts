@@ -5,6 +5,7 @@ export interface UserType extends Document {
   name?: string;
   email?: string;
   password?: string;
+  walletAddress?: string;
   img?: string;
   contracts?: ContractType[];
 }
@@ -17,6 +18,10 @@ const UserSchema = new Schema(
     email: {
       type: String,
       required: true,
+      unique: true,
+    },
+    walletAddress: {
+      type: String,
       unique: true,
     },
     password: {

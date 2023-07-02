@@ -63,7 +63,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           path: "/",
         }),
       ]);
-
+      console.log("Success");
       res.statusCode = 200;
       return res.json({
         success: true,

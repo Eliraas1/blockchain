@@ -10,7 +10,7 @@ import { selectUser, selectUserToken } from "../../../store/slices/userSlice";
 import { carBrands } from "../../constants";
 import { Toast } from "flowbite-react";
 import { v4 } from "uuid";
-
+import { Web3Button } from "@thirdweb-dev/react";
 import {
   useAddress,
   useContract,
@@ -36,9 +36,9 @@ export default function CreateContract() {
   const connectWallet = useMetamask();
 
   const {
-    mutateAsync: createContract,
-    isLoading: createContractLoading,
-    error: createContractErr,
+    mutateAsync: createSmartContract,
+    isLoading: createSmartContractLoading,
+    error: createSmartContractErr,
   } = useContractWrite(contract, "createSale");
 
   const token = useAppSelector(selectUserToken);
@@ -47,14 +47,16 @@ export default function CreateContract() {
   const dispatch = useAppDispatch();
   const [email, setEmail] = useState("");
   const [sellerEmail, setSellerEmail] = useState("");
+  // const [price, setPrice] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [errors, setErrors] = useState<FormErrors>({});
   const carBrand = useRef("");
+  const price = useRef<number>(0);
   useEffect(() => {
     if (user.email) setSellerEmail(user.email);
   }, [user.email]);
   const {
-    trigger: CreateContract,
+    trigger: createContract,
     data,
     error,
     isMutating,
@@ -84,25 +86,25 @@ export default function CreateContract() {
 
     return uintValue.toString();
   }
-  const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    if (!address) await connectWallet();
-    console.log(email, sellerEmail);
-    const ss = await createContract({
-      args: [
-        "0xa509def675E9FD6914FFE7E52bAfFC675B5e665C",
-        "0xa509def675E9FD6914FFE7E52bAfFC675B5e665C",
-        1,
-      ],
-    });
-    console.log(ss.receipt);
-    return;
+
+  const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    price.current = +event.target.value;
+  };
+
+  const handleSubmit = async () => {
     try {
       console.log(carBrand.current);
-      const res = await CreateContract({
+      const contractId = v4();
+      const fixedPrice = convertToUint(price.current);
+      await createSmartContract({
+        args: [address, email, fixedPrice, contractId],
+      });
+      const res = await createContract({
         to: email,
         carBrand: carBrand.current,
         expires: startDate,
+        price: price.current,
+        contractId,
       });
       const jsonRes = await res?.json();
       console.log(jsonRes);
@@ -255,13 +257,18 @@ export default function CreateContract() {
                           htmlFor="email-address"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Seller&apos;s email address
+                          Seller&apos;s wallet address
                         </label>
                         <input
                           type="text"
                           // value={sellerEmail}
-                          placeholder={sellerEmail}
-                          disabled={false}
+                          placeholder={
+                            `${address?.substring(0, 5)}...${address?.substring(
+                              address.length,
+                              address.length - 5
+                            )}` || "address"
+                          }
+                          disabled={true}
                           onChange={(event) => {
                             setSellerEmail(event.target.value), validate();
                           }}
@@ -275,12 +282,12 @@ export default function CreateContract() {
                           htmlFor="email-address"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Buyer&apos;s email address
+                          Buyer&apos;s wallet address
                         </label>
                         <input
                           type="text"
                           value={email}
-                          placeholder="Email address of the buyer"
+                          placeholder="address"
                           required
                           onChange={(event) => {
                             setEmail(event.target.value), validate();
@@ -288,6 +295,25 @@ export default function CreateContract() {
                           name="email-address"
                           id="email-address"
                           autoComplete="email"
+                          className="mt-1 block w-full text-gray-500 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        />
+                      </div>
+                      <div className="col-span-6 sm:col-span-4">
+                        <label
+                          htmlFor="price"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Car price
+                        </label>
+                        <input
+                          type="number"
+                          // value={email}
+                          placeholder="0"
+                          required
+                          onChange={handlePriceChange}
+                          name="price"
+                          id="price"
+                          // autoComplete="email"
                           className="mt-1 block w-full text-gray-500 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                         />
                       </div>
@@ -368,6 +394,17 @@ export default function CreateContract() {
                         </div>
                       )}
                     </button>
+                    <Web3Button
+                      contractAddress={WALLET_ID as string}
+                      contractAbi={contract?.abi}
+                      action={async (contract) => {
+                        // await handleSubmit(contract);
+                        await handleSubmit();
+                      }}
+                      // onclick={(e) => e.preventDefault()}
+                    >
+                      Create contract
+                    </Web3Button>
                     {errors.server && (
                       <p className="text-red-500 text-xs italic mt-2">
                         {errors.server}

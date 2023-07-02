@@ -25,6 +25,19 @@ export async function createUser(user: any) {
     throw new Error(error.message as string);
   }
 }
+export async function updateUser(user: any) {
+  if (!user.email) throw new Error("Email Is Required");
+  const { _id } = user;
+  const updatedUser = await User.findByIdAndUpdate(
+    { _id },
+    {
+      ...user,
+    }
+  );
+  if (!updatedUser) throw new Error("User not  exist");
+
+  return updatedUser;
+}
 
 export async function getUserById(id: string) {
   try {

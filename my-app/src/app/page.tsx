@@ -37,6 +37,7 @@ function Home() {
   // // }
   // // contract?.abi.
   console.log({ contractData: contractData });
+  console.log("Home page token: " + token);
   return (
     <div className="w-full  flex justify-center">
       <div className="h-[32rem] w-[93vw]  max-w-6xl mx-2    py-10  ">
