@@ -18,7 +18,7 @@ import {
   useContractWrite,
   useMetamask,
 } from "@thirdweb-dev/react";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 interface FormErrors {
   email?: string;
   carBrand?: string;
@@ -92,12 +92,14 @@ export default function CreateContract() {
   };
 
   const handleSubmit = async () => {
+    const toastId = toast.loading("Creating smart contract...");
     try {
-      console.log(carBrand.current);
+      // Toaster({toastOptions:{}})
       const contractId = v4();
+      console.log(contractId);
       const fixedPrice = convertToUint(price.current);
       await createSmartContract({
-        args: [address, email, fixedPrice, contractId],
+        args: [email, address, fixedPrice, contractId, carBrand.current],
       });
       const res = await createContract({
         to: email,
@@ -110,17 +112,22 @@ export default function CreateContract() {
       console.log(jsonRes);
       if (jsonRes.success) {
         console.log(jsonRes.data);
-        document.querySelector(".my-toast")?.classList?.toggle("hidden");
+        price.current = 0;
+        // document.querySelector(".my-toast")?.classList?.toggle("hidden");
         setEmail("");
         setStartDate(undefined);
+        toast.dismiss();
+        toast.success("Smart contract created successfully!", { id: toastId });
         // dispatch(login({ ...jsonRes.data.user }));
       } else {
         console.log(jsonRes.message);
+        toast.error("error: " + jsonRes.message, { id: toastId });
         setErrors({ server: jsonRes.message });
       }
     } catch (err) {
       console.log("err", err);
       console.log("error", error);
+      toast.error("error: " + err + error, { id: toastId });
     }
     // perform authentication here
   };
@@ -396,7 +403,8 @@ export default function CreateContract() {
                     </button>
                     <Web3Button
                       contractAddress={WALLET_ID as string}
-                      contractAbi={contract?.abi}
+                      // contractAbi={contract?.abi}
+                      type="button"
                       action={async (contract) => {
                         // await handleSubmit(contract);
                         await handleSubmit();

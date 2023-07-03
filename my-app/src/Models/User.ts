@@ -20,10 +20,6 @@ const UserSchema = new Schema(
       required: true,
       unique: true,
     },
-    walletAddress: {
-      type: String,
-      unique: true,
-    },
     password: {
       type: String,
       required: true,
@@ -31,6 +27,11 @@ const UserSchema = new Schema(
     },
     img: {
       type: String,
+    },
+    isApproval: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
     contracts: [
       {

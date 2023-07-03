@@ -13,7 +13,7 @@ import moment from "moment";
 import Link from "next/link";
 import { Tabs } from "flowbite-react";
 import ContractList from "./Components/ContractList";
-import { useContract, useContractRead } from "@thirdweb-dev/react";
+import { useAddress, useContract, useContractRead } from "@thirdweb-dev/react";
 import nextConfig from "../../next.config";
 // import ".env.local"
 // const WALLET_ID = process.env["WALLET_ID"];
@@ -29,15 +29,11 @@ interface FormErrors {
 }
 function Home() {
   const token = useAppSelector(selectUserToken);
-  if (!token) redirect("/login");
   const user = useAppSelector(selectUser);
   const contracts = useAppSelector(selectContracts);
-  const { contract, data, isLoading } = useContract(WALLET_ID);
-  const { data: contractData } = useContractRead(contract, "carSales", [1]);
-  // // }
-  // // contract?.abi.
-  console.log({ contractData: contractData });
-  console.log("Home page token: " + token);
+  const address = useAddress();
+  if (!token) redirect("/login");
+
   return (
     <div className="w-full  flex justify-center">
       <div className="h-[32rem] w-[93vw]  max-w-6xl mx-2    py-10  ">
@@ -52,7 +48,10 @@ function Home() {
                 <div className=" max-w-7xl max-h-[74vh] overflow-x-auto overflow-y-auto animate__animated animate__fadeInLeft">
                   {/* <h1 className="  text-center my-5 text-3xl">My Contracts</h1> */}
                   {contracts?.sending && contracts?.sending.length > 0 ? (
-                    <ContractList contracts={contracts?.sending} />
+                    <ContractList
+                      contracts={contracts?.sending}
+                      myId={address}
+                    />
                   ) : (
                     <div className="flex-col align-center justify-center text-center">
                       <h1 className="">No contracts yet...</h1>
@@ -75,7 +74,22 @@ function Home() {
                   {contracts?.receive && contracts?.receive.length > 0 ? (
                     <ContractList
                       contracts={contracts?.receive}
-                      myId={user._id}
+                      myId={address}
+                    />
+                  ) : (
+                    <h1>No contracts yet...</h1>
+                  )}
+                </div>
+              </Tabs.Item>
+              <Tabs.Item title="Third Party" className="link:text-black">
+                <div className=" max-w-7xl max-h-[74vh] overflow-x-auto overflow-y-auto animate__animated animate__fadeInRight">
+                  {/* <h1 className="  text-center my-5 text-3xl">My Contracts</h1> */}
+                  {contracts?.waiting && contracts?.waiting.length > 0 ? (
+                    <ContractList
+                      contracts={contracts?.waiting}
+                      myId={address}
+                      // מכין קפה ובא
+                      // מדבר בטלפון כמה דק
                     />
                   ) : (
                     <h1>No contracts yet...</h1>

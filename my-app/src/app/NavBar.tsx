@@ -77,11 +77,11 @@ function NavBar() {
           </span> */}
         </Navbar.Brand>
         <div className="flex md:order-2  ">
-          {token && (
+          {/* {token && (
             <div className="flex md:w-[12vw] lg:w-[15vw] xl:w-[20vw] 2xl:w-[20vw] items-center justify-start">
               <Notifications />
             </div>
-          )}
+          )} */}
           <Navbar.Toggle className="ml-3" />
         </div>
         <Navbar.Collapse>

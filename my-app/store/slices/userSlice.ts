@@ -39,25 +39,25 @@ export const userSlice = createSlice({
       return state;
     },
     setSendingContract: (state, action: PayloadAction<ContractState>) => {
-      const { _id, to, ...rest } = action.payload;
-      if (state.contracts && state.contracts.sending) {
-        const index = state.contracts.sending.findIndex(
-          (cont) => cont._id == _id
-        );
-        if (~index && state.contracts && state.contracts.sending[index]) {
-          state.contracts.sending[index] = {
-            ...state.contracts.sending[index],
-            to: { ...state.contracts.sending[index].to, email: to?.email },
-            ...rest,
-          };
-        }
-      }
+      // const { _id, to, ...rest } = action.payload;
+      // if (state.contracts && state.contracts.sending) {
+      //   const index = state.contracts.sending.findIndex(
+      //     (cont) => cont._id == _id
+      //   );
+      //   if (~index && state.contracts && state.contracts.sending[index]) {
+      //     state.contracts.sending[index] = {
+      //       ...state.contracts.sending[index],
+      //       to: { ...state.contracts.sending[index].to, email: to?.email },
+      //       ...rest,
+      //     };
+      //   }
+      // }
       return state;
     },
     deleteContractById: (state, action: PayloadAction<string>) => {
       if (state.contracts && state.contracts.sending) {
         const index = state.contracts.sending.findIndex(
-          (cont) => cont._id == action.payload
+          (cont) => cont.contractId == action.payload
         );
         if (~index && state.contracts && state.contracts.sending[index]) {
           state.contracts.sending.splice(index, 1);
@@ -67,23 +67,23 @@ export const userSlice = createSlice({
       return state;
     },
     setReceivingContract: (state, action: PayloadAction<ContractState>) => {
-      const { _id, confirm, decline } = action.payload;
-      console.log(_id, confirm, decline);
-      if (state.contracts && state.contracts.receive) {
-        const index = state.contracts.receive.findIndex(
-          (cont) => cont._id == _id
-        );
-        console.log(index);
-        if (~index && state.contracts && state.contracts.receive[index]) {
-          console.log("before", state.contracts.receive[index]);
-          state.contracts.receive[index] = {
-            ...state.contracts.receive[index],
-            confirm,
-            decline,
-          };
-          console.log("after", state.contracts.receive[index]);
-        }
-      }
+      // const { _id, confirm, decline } = action.payload;
+      // console.log(_id, confirm, decline);
+      // if (state.contracts && state.contracts.receive) {
+      //   const index = state.contracts.receive.findIndex(
+      //     (cont) => cont._id == _id
+      //   );
+      //   console.log(index);
+      //   if (~index && state.contracts && state.contracts.receive[index]) {
+      //     console.log("before", state.contracts.receive[index]);
+      //     state.contracts.receive[index] = {
+      //       ...state.contracts.receive[index],
+      //       confirm,
+      //       decline,
+      //     };
+      //     console.log("after", state.contracts.receive[index]);
+      //   }
+      // }
       return state;
     },
   },
