@@ -8,80 +8,107 @@ import { useDispatch } from "react-redux";
 import { useAppDispatch, useAppSelector } from "../../../store/store";
 import { selectMessage } from "../../../store/slices/showSlice";
 import { setReceivingContract } from "../../../store/slices/userSlice";
-import { ContractState } from "../../../store/slices/types";
+import { ContractState, SmartContractType } from "../../../store/slices/types";
 import useSWRMutation from "swr/mutation";
+import { formatBigInt } from "../SideBar";
+import { useContract, useContractWrite } from "@thirdweb-dev/react";
+import { toast } from "react-hot-toast";
+import { ethers } from "ethers";
 type props = {
-  contracts: ContractState[];
+  contracts: SmartContractType[];
   myId?: string;
 };
+const WALLET_ID = process.env.NEXT_PUBLIC_WALLET_ID;
+
 function ContractList({ contracts, myId }: props) {
   const dispatch = useDispatch();
   const appMessage = useAppSelector(selectMessage);
   const [message, setMessage] = useState("");
+
+  const { contract } = useContract(WALLET_ID);
+  const { mutateAsync: cancelDeal } = useContractWrite(contract, "cancelDeal");
+  const { mutateAsync: acceptDeal } = useContractWrite(
+    contract,
+    "confirmPayment"
+  );
+  const { mutateAsync: acceptKey } = useContractWrite(
+    contract,
+    "confirmKeysDelivery"
+  );
+  const { mutateAsync: confirmOwnershipTransfer } = useContractWrite(
+    contract,
+    "confirmOwnershipTransfer"
+  );
+
   useEffect(() => {
     if (appMessage) setMessage(appMessage);
   }, [appMessage]);
-
-  const {
-    trigger: AcceptContract,
-    data: acceptContractData,
-    error: acceptContractError,
-    isMutating: isMutatingAccpet,
-  } = useSWRMutation("/api/contract/accept", postRequest);
-  const {
-    trigger: DeclineContract,
-    data: declineContractData,
-    error: declineContractError,
-    isMutating: isMutatingDecline,
-  } = useSWRMutation("/api/contract/decline", postRequest);
 
   const handleDecline = async (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>,
     contId: string
   ) => {
     event.preventDefault();
+    const toastId = toast.loading("cancel contract number : " + contId);
     try {
-      const res = await DeclineContract({
-        id: contId,
-      });
-      const jsonRes = await res?.json();
-      console.log(jsonRes);
-      if (jsonRes.success) {
-        console.log(jsonRes.data);
-        dispatch(
-          setReceivingContract({ _id: contId, confirm: false, decline: true })
-        );
-        setMessage("Contract Declined!");
-      } else {
-        console.log(jsonRes.message);
-      }
+      const data = await cancelDeal({ args: [contId] });
+      toast.success("Contract canceled successfully!", { id: toastId });
     } catch (err) {
       console.log("err", err);
+      toast.error("Contract error!", { id: toastId });
     }
   };
-  const handleAccept = async (
+  const handleConfirmOwnershipTransfer = async (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>,
     contId: string
   ) => {
     event.preventDefault();
+    const toastId = toast.loading("Confirm contract...");
     try {
-      const res = await AcceptContract({
-        id: contId,
+      const data = await confirmOwnershipTransfer({
+        args: [contId],
       });
-      const jsonRes = await res?.json();
-      console.log(jsonRes);
-      if (jsonRes.success) {
-        console.log(jsonRes.data);
-        dispatch(
-          setReceivingContract({ _id: contId, confirm: true, decline: false })
-        );
-        setMessage("Contract Accepted!");
-        // setContracts(jsonRes.data.contracts);
-      } else {
-        console.log(jsonRes.message);
-      }
+      toast.success("Contract confirm successfully!", { id: toastId });
     } catch (err) {
       console.log("err", err);
+      toast.error("Contract confirmation error!" + err, { id: toastId });
+    }
+  };
+  const handleAcceptKey = async (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    contId: string
+  ) => {
+    event.preventDefault();
+    const toastId = toast.loading("Accepting key...");
+    try {
+      const data = await acceptKey({
+        args: [contId],
+      });
+      toast.success("Key accepted successfully!", { id: toastId });
+    } catch (err) {
+      console.log("err", err);
+      toast.error("Contract error!" + err, { id: toastId });
+    }
+  };
+  const handleAccept = async (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    cont: SmartContractType
+  ) => {
+    event.preventDefault();
+    const toastId = toast.loading(
+      "Accepting contract number : " + cont.contractId
+    );
+    const price = formatBigInt(cont);
+    try {
+      if (!price) throw "try again later..." + price;
+      const data = await acceptDeal({
+        args: [cont.contractId],
+        overrides: { value: ethers.utils.parseEther(price) },
+      });
+      toast.success("Contract accepted successfully!", { id: toastId });
+    } catch (err) {
+      console.log("err", err);
+      toast.error("Contract error!" + err, { id: toastId });
     }
   };
   return (
@@ -121,7 +148,7 @@ function ContractList({ contracts, myId }: props) {
               Brand
             </th>
             <th scope="col" className="px-6 py-3">
-              Expire
+              Price
             </th>
             <th scope="col" className="px-6 py-3">
               Status
@@ -131,24 +158,31 @@ function ContractList({ contracts, myId }: props) {
         </thead>
         <tbody>
           {contracts?.map((cont) => {
-            const statusColor = cont.confirm
+            const statusColor = cont.ownershipTransferred
               ? "bg-green-400"
-              : cont.decline
+              : cont.canceled
               ? "bg-red-400"
-              : !cont.confirm
+              : !cont.paymentDelivered || !cont.keysDelivered
               ? "bg-amber-400 animate-ping"
-              : "bg-gray-600";
-            const status = cont.confirm
-              ? "Accepted"
-              : cont.decline
+              : "bg-yellow-400 animate-ping";
+
+            const status = cont.ownershipTransferred
+              ? "Deal Approve"
+              : cont.canceled
               ? "Declined"
-              : !cont.confirm
-              ? "Pending"
-              : "Expired";
-            const accept = myId == cont.to?._id && status == "Pending";
+              : !cont.paymentDelivered
+              ? "Pending Payment"
+              : !cont.keysDelivered
+              ? "Pending Key Delivery"
+              : "Pending Third Party";
+
+            const accept = myId === cont.buyer && status === "Pending Payment";
+            const showDecline =
+              !cont.ownershipTransferred &&
+              (!cont.keysDelivered || !cont.paymentDelivered);
             return (
               <tr
-                key={cont._id}
+                key={cont.contractId}
                 className="bg-white-300/50 backdrop-blur border-b hover:bg-gray-50/50 hover:backdrop-blur"
               >
                 <th
@@ -157,40 +191,45 @@ function ContractList({ contracts, myId }: props) {
                 >
                   <div className="pl-3">
                     <div className="text-base font-semibold">
-                      {cont.from?.name}
+                      {`${cont.owner?.substring(
+                        0,
+                        5
+                      )}...${cont.owner?.substring(
+                        cont.owner.length,
+                        cont.owner.length - 5
+                      )}`}
                     </div>
-                    <div className="font-normal text-gray-500">
+                    {/* <div className="font-normal text-gray-500">
                       {cont.from?.email}
-                    </div>
+                    </div> */}
                   </div>
                 </th>
                 <td className="px-6 py-4">
                   <div className="pl-3">
                     <div className="text-base text-gray-900 font-semibold">
-                      {cont.to?.name}
+                      {`${cont.buyer?.substring(
+                        0,
+                        5
+                      )}...${cont.buyer?.substring(
+                        cont.buyer.length,
+                        cont.buyer.length - 5
+                      )}`}
                     </div>
-                    <div className="font-normal text-gray-500">
+                    {/* <div className="font-normal text-gray-500">
                       {cont.to?.email}
-                    </div>
+                    </div> */}
                   </div>
                 </td>
 
                 <td className="px-6 py-4">{cont.carBrand}</td>
-                <td className="px-6 py-4">
-                  {moment(cont.expires).format("DD-MM-YYYY")}
-                </td>
+                <td className="px-6 py-4">{formatBigInt(cont)} MATIC</td>
+                {/* <td className="px-6 py-4">{cont.sellingPrice}</td> */}
                 <td className="px-6 py-4">
                   <div className="flex items-center">
                     <div
                       className={`${statusColor} h-2.5 w-2.5 rounded-full mr-2 `}
                     ></div>
-                    <div
-                      className={`${
-                        status == "Pending" && "animate-pulse"
-                      } uppercase tracking-wide`}
-                    >
-                      {status}
-                    </div>
+                    <div className={` uppercase tracking-wide`}>{status}</div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
@@ -198,38 +237,68 @@ function ContractList({ contracts, myId }: props) {
                     <div className=" flex place-content-center w-32 grid-cols-2 divide-x-[2px]">
                       <div
                         onClick={(e) => {
-                          handleAccept(e, cont._id as string);
+                          handleAccept(e, cont);
                         }}
                         className="cursor-pointer font-medium pr-2 text-green-500 hover:underline"
                       >
                         Accept
                       </div>
 
-                      <div
-                        onClick={(e) => {
-                          handleDecline(e, cont._id as string);
-                        }}
-                        className="cursor-pointer font-medium pl-2 text-red-500 hover:underline"
-                      >
-                        Decline
-                      </div>
+                      {showDecline && (
+                        <div
+                          onClick={(e) => {
+                            handleDecline(e, cont.contractId as string);
+                          }}
+                          className="cursor-pointer font-medium pl-2 text-red-500 hover:underline"
+                        >
+                          Decline
+                        </div>
+                      )}
                     </div>
-                  ) : status == "Accepted" || status == "Declined" ? (
+                  ) : status === "Deal Approve" || status === "Declined" ? (
                     <div></div>
                   ) : (
-                    // <a
-                    //   href="#"
-                    //   className="font-medium text-red-500 hover:underline"
-                    // >
-                    //   Delete
-                    // </a>
-                    <Link
-                      href={`contract/${cont._id}`}
-                      className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                    >
-                      Edit
-                    </Link>
+                    showDecline && (
+                      <div className=" flex place-content-center w-32 grid-cols-2 divide-x-[2px]">
+                        {status === "Pending Key Delivery" &&
+                          cont.buyer === myId && (
+                            <div
+                              onClick={(e) => {
+                                handleAcceptKey(e, cont.contractId as string);
+                              }}
+                              className="cursor-pointer font-medium pr-2 text-green-500 hover:underline"
+                            >
+                              Accept key
+                            </div>
+                          )}
+                        <div
+                          onClick={(e) => {
+                            handleDecline(e, cont.contractId as string);
+                          }}
+                          className="cursor-pointer font-medium pl-2 text-red-500 hover:underline"
+                        >
+                          Decline
+                        </div>
+                      </div>
+                    )
                   )}
+
+                  {status === "Pending Third Party" &&
+                    cont.thirdParty === myId && (
+                      <div className=" flex place-content-center w-32 grid-cols-2 divide-x-[2px]">
+                        <div
+                          onClick={(e) => {
+                            handleConfirmOwnershipTransfer(
+                              e,
+                              cont.contractId as string
+                            );
+                          }}
+                          className="cursor-pointer font-medium pl-2 text-green-500 hover:underline"
+                        >
+                          confirm
+                        </div>
+                      </div>
+                    )}
                 </td>
               </tr>
             );

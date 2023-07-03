@@ -12,22 +12,25 @@ export async function createContract(
   contract: CreateContractProps
 ) {
   try {
+    console.log("created\n\n\n\n askldlaksdjlkasdlkklkl");
     const { to: toUserEmail, ...restContract } = contract;
     if (!restContract.carBrand) throw new Error("Car Brand Is Required");
     if (!restContract.expires) throw new Error("Expiration Date Is Required");
     if (!toUserEmail) throw new Error("Buyer's Email Is Required");
     const toEmail = toUserEmail.toLowerCase();
 
-    const to = await User.findOne({ email: toEmail });
-    if (!to) throw new Error("User Not Found!");
+    // const to = await User.findOne({ email: toEmail });
+    // if (!to) throw new Error("User Not Found!");
 
-    const from = await User.findOne({ _id });
-    if (!from) throw new Error("user not Logged in!");
+    // const from = await User.findOne({ _id });
+    // if (!from) throw new Error("user not Logged in!");
     const createdContract = await new Contract({
       ...restContract,
-      to,
-      from,
+      // to,
+      // from,
     });
+
+    console.log("created\n\n\n\n", { createdContract });
     await createdContract.save();
     return createdContract;
   } catch (error: any) {

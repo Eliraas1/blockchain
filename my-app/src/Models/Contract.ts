@@ -1,5 +1,4 @@
-import moment from "moment";
-import mongoose, { Schema, model, Document } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 import { UserType } from "./User";
 export interface ContractType extends Document {
   _id?: string;
@@ -9,11 +8,17 @@ export interface ContractType extends Document {
   expires?: Date;
   from?: UserType;
   to?: UserType;
+  contractId?: string;
   decline?: boolean;
+  price?: number;
 }
 const ContractSchema = new Schema(
   {
     carBrand: {
+      type: String,
+      required: true,
+    },
+    contractId: {
       type: String,
       required: true,
     },
@@ -33,15 +38,19 @@ const ContractSchema = new Schema(
       type: Date,
       default: null,
     },
+    price: {
+      type: Number,
+      required: false,
+    },
     from: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
     },
     to: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
     },
   },
   { timestamps: true }

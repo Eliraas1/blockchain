@@ -4,11 +4,9 @@ import { Montserrat } from "next/font/google";
 import "./globals.css";
 import "animate.css";
 import NavBar from "./NavBar";
-// import { Providers } from "./provider";
 import SideBar from "./SideBar";
 import Image from "next/image";
 import Providers from "./Provider";
-import { Alert } from "flowbite-react";
 const inter = Montserrat({ subsets: ["latin"], weight: "600" });
 export default function RootLayout({
   children,
@@ -19,7 +17,6 @@ export default function RootLayout({
     <Image
       id="myContainer"
       className="-z-20 animate-[blur_3s_ease-in-out_both] "
-      // width={900}
       objectFit="cover"
       style={{
         aspectRatio: 1 / 2,
@@ -38,24 +35,25 @@ export default function RootLayout({
   );
 
   return (
-    <Providers>
-      <html className={inter.className}>
-        <head />
+    <html className={inter.className}>
+      <head />
 
-        <body className="bg-gray-600 h-[100%] ">
-          {/* <header className=""> */}
-          {/* <Bgc /> */}
-          {/* <Alert color="info">Alert!</Alert> */}
-          {/* <NavBar /> */}
-          {/* </header> */}
-          {/* <SideBar /> */}
+      <body className="bg-gray-600 h-[100%] ">
+        <Providers>
+          <header className="">
+            <Bgc />
+            {/* <Alert color="info">Alert!</Alert> */}
+            <NavBar />
+          </header>
+          <SideBar />
           {/* <div className="h-screen grid place-content-center">
             <div className="h-screen absolute -z-10">
             </div>
           </div> */}
+
           <div className="h-[92vh]  ">{children}</div>
-        </body>
-      </html>
-    </Providers>
+        </Providers>
+      </body>
+    </html>
   );
 }

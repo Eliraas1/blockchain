@@ -1,5 +1,5 @@
 "use client";
-import { redirect, useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import { postRequest } from "../../../pages/api/hello";
 import React, { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../store/store";
@@ -30,7 +30,6 @@ type props = {
   params: { cid: string };
 };
 export default function EditContract({ params: { cid } }: props) {
-  const router = useRouter();
   const token = useAppSelector(selectUserToken);
   const user = useAppSelector(selectUser);
   const contract = useAppSelector(selectContracts);
@@ -55,7 +54,7 @@ export default function EditContract({ params: { cid } }: props) {
 
       carBrand.current = cont?.carBrand || "";
     }
-  }, [contract?.sending.length]);
+  }, [contract?.sending.length, cid,contract?.sending]);
   useEffect(() => {
     return () => {
       clearTimeout(timer);
@@ -107,7 +106,7 @@ export default function EditContract({ params: { cid } }: props) {
           setMessage(`Contract of ${carBrand.current} Successfully Deleted!`)
         );
         setStartDate(new Date());
-        router.back();
+        // router.back();
       } else {
         // console.log(jsonRes.error);
         setErrors({ server: jsonRes.error });
@@ -288,7 +287,7 @@ export default function EditContract({ params: { cid } }: props) {
                           htmlFor="email-address"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Seller's email address
+                          Seller&apos;s email address
                         </label>
                         <input
                           type="text"
@@ -308,7 +307,7 @@ export default function EditContract({ params: { cid } }: props) {
                           htmlFor="email-address"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Buyer's email address
+                          Buyer&apos;s email address
                         </label>
                         <input
                           type="text"

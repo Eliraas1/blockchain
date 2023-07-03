@@ -7,18 +7,29 @@ import {
   selectUserToken,
   setContracts,
 } from "../../store/slices/userSlice";
-import { ContractState } from "../../store/slices/types";
+import { ContractState, SmartContractType } from "../../store/slices/types";
 import LoadingSpinner from "./Components/LoadingSpinner";
+import {
+  useAddress,
+  useContract,
+  useContractRead,
+  useMetamask,
+} from "@thirdweb-dev/react";
+import { ethers } from "ethers";
 const ContractElement = ({
   txt,
   pending,
   decline,
   _id,
+  waitForPayment,
+  waitForKey,
 }: {
   txt: string;
   pending: boolean;
   decline: boolean;
   _id?: string;
+  waitForPayment?: boolean;
+  waitForKey?: boolean;
 }) => {
   const url = _id ? `/contract/${_id}` : "#";
   const cursor = !_id && "cursor-default";
@@ -50,7 +61,15 @@ const ContractElement = ({
         </span>
       ) : pending ? (
         <span className="bg-gray-700 animate-pulse ml-2 text-amber-500 text-xs font-medium mr-2 px-2.5 py-0.5 rounded  border border-amber-500">
-          Pending
+          Pending Third Party
+        </span>
+      ) : waitForPayment ? (
+        <span className="bg-gray-700 animate-pulse ml-2 text-amber-500 text-xs font-medium mr-2 px-2.5 py-0.5 rounded  border border-amber-500">
+          Payment Pending
+        </span>
+      ) : waitForKey ? (
+        <span className="bg-gray-700 ml-2 text-lime-400 text-xs font-medium mr-2 px-2.5 py-0.5 rounded  border border-lime-400">
+          Key Pending
         </span>
       ) : (
         <span className="bg-gray-700 ml-2 text-lime-400 text-xs font-medium mr-2 px-2.5 py-0.5 rounded  border border-lime-400">
@@ -116,21 +135,54 @@ export const fetcher = async (url: string) =>
 export default function SideBar() {
   const [signIn, setIsSignIn] = useState(false);
   const token = useAppSelector(selectUserToken);
-  useEffect(() => {
-    if (token) {
-      setIsSignIn(true);
-    } else setIsSignIn(false);
-  }, [token]);
-  if (!signIn) return null;
+  // const address = useAddress();
+  // const connectWallet = useMetamask();
+  // const connect = async () => {
+  //   await connectWallet();
+  // };
+  // useEffect(() => {
+  //   console.log({ address });
+  //   if (!address) {
+  //     connect();
+  //   }
+  // }, [address]);
+  // useEffect(() => {
+  //   if (token) {
+  //     setIsSignIn(true);
+  //   } else setIsSignIn(false);
+  // }, [token]);
+  if (!token) return <></>;
   return <RealSideBar />;
 }
+const WALLET_ID = process.env.NEXT_PUBLIC_WALLET_ID;
+export const formatBigInt = (contract: SmartContractType) => {
+  if (!contract) return undefined;
+  if (!contract.sellingPrice) return undefined;
+  return ethers.utils.formatEther(contract?.sellingPrice?.toString?.());
+};
 export function RealSideBar() {
-  const { data, error, isLoading } = useSWR("/api/contract/getMy", fetcher, {
-    refreshInterval: 10000,
-  });
+  // const { data, error, isLoading } = useSWR("/api/contract/getMy", fetcher, {
+  //   // refreshInterval: 10000,
+  // });
+  const isLoading = false;
   const dispatch = useAppDispatch();
   const [mySendingContracts, setMySendingContracts] = useState([]);
   const [myReceiveContracts, setMyReceiveContractsContracts] = useState([]);
+  const address = useAddress();
+  const { contract } = useContract(WALLET_ID);
+  const { data: sellerContracts, isLoading: sellerLoading } = useContractRead(
+    contract,
+    "getContractsBySeller",
+    [address]
+  );
+  const { data: buyerContracts, isLoading: buyerLoading } = useContractRead(
+    contract,
+    "getContractsByBuyer",
+    [address]
+  );
+  const { data: waitingContracts, isLoading: waitingContractsLoading } =
+    useContractRead(contract, "getUntransferredContracts", [address]);
+
   const CloseIcon = () => (
     <a
       // onClick={closeSideBar}
@@ -163,21 +215,20 @@ export function RealSideBar() {
   useEffect(() => {
     animateCSS("aside", "fadeInLeft");
   }, []);
+
   useEffect(() => {
-    if (data) {
-      if (data.status == 401) {
-        dispatch(logout());
-      }
+    if (sellerContracts && buyerContracts) {
       dispatch(
         setContracts({
-          receive: data.data?.myReceiveContracts,
-          sending: data.data?.mySendingContracts,
+          receive: buyerContracts,
+          sending: sellerContracts,
+          waiting: waitingContracts,
         })
       );
-      setMySendingContracts(data.data?.mySendingContracts);
-      setMyReceiveContractsContracts(data.data?.myReceiveContracts);
+      // setMySendingContracts(data.data?.mySendingContracts);
+      // setMyReceiveContractsContracts(data.data?.myReceiveContracts);
     }
-  }, [data, error]);
+  }, [sellerContracts, buyerContracts, dispatch]);
 
   return (
     <aside
@@ -191,45 +242,67 @@ export function RealSideBar() {
               <span className="p-2 text-transparent bg-clip-text bg-gradient-to-r to-orange-400 from-sky-400 hover:to-sky-200 hover:from-orange-400">
                 My Sending Contracts
               </span>
-              {isLoading && (
+              {sellerLoading && (
                 <div className="pt-6 pl-10">
                   <LoadingSpinner />
                 </div>
               )}
-              {mySendingContracts?.map((cont: ContractState) => (
+              {sellerContracts?.map((cont: SmartContractType) => (
                 <ContractElement
-                  key={cont._id}
+                  key={cont.contractId}
                   txt={"Contract " + cont.carBrand}
-                  pending={!cont.confirm}
-                  decline={cont.decline as boolean}
-                  _id={cont._id as string}
+                  pending={
+                    (cont.paymentDelivered &&
+                      cont.keysDelivered &&
+                      !cont.ownershipTransferred) ||
+                    false
+                  }
+                  decline={cont.canceled || false}
+                  _id={cont.contractId || ""}
+                  waitForPayment={
+                    (!cont.paymentDelivered && !cont.canceled) || false
+                  }
                 />
               ))}
-              {!mySendingContracts && (
+              {!sellerContracts && (
                 <span className="flex-1 ml-3 whitespace-nowrap text-gray-400 font-normal text-lg">
                   No Contracts
                 </span>
               )}
             </div>
             <div>
-              <span className="p-2  text-transparent bg-clip-text bg-gradient-to-r to-sky-400 from-orange-400 hover:to-sky-200 hover:from-orange-400">
+              <span className="p-2 mt-5 text-transparent bg-clip-text bg-gradient-to-r to-sky-400 from-orange-400 hover:to-sky-200 hover:from-orange-400">
                 My Receiving Contracts
               </span>
-              {isLoading && (
+              {buyerLoading && (
                 <div className="pt-6 pl-10">
                   <LoadingSpinner />
                 </div>
               )}
-              {myReceiveContracts?.map((cont: ContractState) => (
+              {buyerContracts?.map((cont: SmartContractType) => (
                 <ContractElement
-                  key={cont._id}
+                  key={cont.contractId}
                   txt={"Contract " + cont.carBrand}
-                  pending={!cont.confirm}
-                  decline={cont.decline as boolean}
-                  // _id={cont._id as string}
+                  pending={
+                    (cont.paymentDelivered &&
+                      cont.keysDelivered &&
+                      !cont.ownershipTransferred) ||
+                    false
+                  }
+                  decline={cont.canceled || false}
+                  _id={cont.contractId || ""}
+                  waitForPayment={
+                    (!cont.paymentDelivered && !cont.canceled) || false
+                  }
+                  waitForKey={
+                    (cont.paymentDelivered &&
+                      !cont.keysDelivered &&
+                      !cont.canceled) ||
+                    false
+                  }
                 />
               ))}
-              {!myReceiveContracts && (
+              {!buyerContracts && (
                 <span className="flex-1 ml-3 whitespace-nowrap text-gray-400 font-normal text-lg">
                   No Contracts
                 </span>

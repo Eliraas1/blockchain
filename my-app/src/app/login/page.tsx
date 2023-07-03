@@ -5,8 +5,7 @@ import React, { useEffect, useState } from "react";
 // import { Inter } from "@next/font/google";
 // import dbConnect from "@/lib/dbConnect";
 // import { getUsers } from "@/lib/services/users";
-import { useRouter } from "next/navigation";
-import { redirect } from "next/navigation";
+// import { redirect } from "next/navigation";
 import {
   login,
   selectEmailFromRegister,
@@ -17,7 +16,8 @@ import { useAppDispatch, useAppSelector } from "../../../store/store";
 import useSWRMutation from "swr/mutation";
 import { json } from "node:stream/consumers";
 import { postRequest } from "../../pages/api/hello";
-
+import { redirect } from "next/navigation";
+import Image from "next/image";
 interface props {
   users: UserType;
 }
@@ -27,9 +27,10 @@ interface FormErrors {
   server?: string;
 }
 function Login() {
-  const router = useRouter();
   const token = useAppSelector(selectUserToken);
+  console.log({ token });
   if (token) redirect("/");
+
   const dispatch = useAppDispatch();
   const emailFromRegister = useAppSelector(selectEmailFromRegister);
   const [email, setEmail] = useState(
@@ -44,7 +45,7 @@ function Login() {
     isMutating,
   } = useSWRMutation("/api/auth/signin", postRequest);
   //   console.log("asdasdasd", token);
-  //   if (!token) redirect("/login");
+  // if (!token) redirect("/login");
   const validate = () => {
     const newErrors: FormErrors = {};
 
@@ -82,12 +83,12 @@ function Login() {
     }
     // perform authentication here
   };
-  useEffect(() => {}, [email, password]);
-  useEffect(() => {
-    if (token) {
-      router.push("/");
-    }
-  }, [token]);
+  // useEffect(() => {}, [email, password]);
+  // useEffect(() => {
+  //   if (token) {
+  //     router.push("/");
+  //   }
+  // }, [token]);
 
   return (
     <div className="h-[32rem] opacity-[0.93]  grid place-content-center  ">
