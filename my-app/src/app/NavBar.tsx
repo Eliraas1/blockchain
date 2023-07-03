@@ -10,10 +10,11 @@ import { Button, Navbar } from "flowbite-react";
 import { animateCSS, toggleAnimate } from "./SideBar";
 import Notifications from "./Components/Notifications";
 import Image from "next/image";
-import { ConnectWallet } from "@thirdweb-dev/react";
+import { ConnectWallet, useDisconnect } from "@thirdweb-dev/react";
 function NavBar() {
   // const router = useRouter();
   const token = useAppSelector(selectUserToken);
+  const disconnect = useDisconnect();
   const [isSignIn, setIsSignIn] = useState(true);
   const [animate, setAnimate] = useState(true);
   const dispatch = useAppDispatch();
@@ -34,6 +35,7 @@ function NavBar() {
 
       if (jsonRes.success) {
         dispatch(logout());
+        await disconnect();
         // redirect("/login");
       } else {
         alert(jsonRes.message);

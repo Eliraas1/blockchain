@@ -19,21 +19,19 @@ import {
   useMetamask,
 } from "@thirdweb-dev/react";
 import toast, { Toaster } from "react-hot-toast";
+import { ethers } from "ethers";
 interface FormErrors {
   email?: string;
+  thirdParty?: string;
+  price?: string;
   carBrand?: string;
-  expiration?: string;
   server?: string;
 }
 const WALLET_ID = process.env.NEXT_PUBLIC_WALLET_ID;
 export default function CreateContract() {
-  // const router = useRouter();
-
   const { contract } = useContract(WALLET_ID);
-  const { data: contractData } = useContractRead(contract, "carSales", [1]);
 
   const address = useAddress();
-  const connectWallet = useMetamask();
 
   const {
     mutateAsync: createSmartContract,
@@ -42,36 +40,36 @@ export default function CreateContract() {
   } = useContractWrite(contract, "createSale");
 
   const token = useAppSelector(selectUserToken);
-
-  const user = useAppSelector(selectUser);
-  const dispatch = useAppDispatch();
   const [email, setEmail] = useState("");
-  const [sellerEmail, setSellerEmail] = useState("");
-  // const [price, setPrice] = useState("");
+  const [thirdPartyAddress, setThirdPartyAddress] = useState("");
+  const [price, setPrice] = useState<number>(0);
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [errors, setErrors] = useState<FormErrors>({});
-  const carBrand = useRef("");
-  const price = useRef<number>(0);
-  useEffect(() => {
-    if (user.email) setSellerEmail(user.email);
-  }, [user.email]);
+  const carBrand = useRef<string>(carBrands[0]);
+
   const {
     trigger: createContract,
     data,
     error,
     isMutating,
   } = useSWRMutation("/api/contract/create", postRequest);
-  //   console.log("asdasdasd", token);
-  //   if (!token) redirect("/login");
   const validate = () => {
     const newErrors: FormErrors = {};
-
-    if (!email) {
-      newErrors.email = "Email is required";
+    const isValidBuyerAddress = ethers.utils.isAddress(email);
+    const isValidThirdPartyAddress = ethers.utils.isAddress(thirdPartyAddress);
+    if (!email || !isValidBuyerAddress) {
+      newErrors.email = isValidBuyerAddress
+        ? "Buyer wallet address is required"
+        : "Buyer wallet address is not valid";
+    }
+    if (!thirdPartyAddress || !isValidThirdPartyAddress) {
+      newErrors.thirdParty = isValidThirdPartyAddress
+        ? "Third party wallet address is required"
+        : "Third party wallet address is not valid";
     }
 
-    if (!startDate) {
-      newErrors.expiration = "Expiration date is required";
+    if (!price || price <= 0) {
+      newErrors.price = "Price is required";
     }
     if (!carBrand.current) {
       newErrors.carBrand = "Car Brand is required";
@@ -88,7 +86,8 @@ export default function CreateContract() {
   }
 
   const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    price.current = +event.target.value;
+    setPrice(+event.target.value);
+    validate();
   };
 
   const handleSubmit = async () => {
@@ -97,39 +96,26 @@ export default function CreateContract() {
       // Toaster({toastOptions:{}})
       const contractId = v4();
       console.log(contractId);
-      const fixedPrice = convertToUint(price.current);
+      const fixedPrice = convertToUint(price);
       await createSmartContract({
-        args: [email, address, fixedPrice, contractId, carBrand.current],
+        args: [
+          email,
+          thirdPartyAddress,
+          fixedPrice,
+          contractId,
+          carBrand.current,
+        ],
       });
-      const res = await createContract({
-        to: email,
-        carBrand: carBrand.current,
-        expires: startDate,
-        price: price.current,
-        contractId,
-      });
-      const jsonRes = await res?.json();
-      console.log(jsonRes);
-      if (jsonRes.success) {
-        console.log(jsonRes.data);
-        price.current = 0;
-        // document.querySelector(".my-toast")?.classList?.toggle("hidden");
-        setEmail("");
-        setStartDate(undefined);
-        toast.dismiss();
-        toast.success("Smart contract created successfully!", { id: toastId });
-        // dispatch(login({ ...jsonRes.data.user }));
-      } else {
-        console.log(jsonRes.message);
-        toast.error("error: " + jsonRes.message, { id: toastId });
-        setErrors({ server: jsonRes.message });
-      }
-    } catch (err) {
-      console.log("err", err);
-      console.log("error", error);
-      toast.error("error: " + err + error, { id: toastId });
+      setPrice(0);
+      setThirdPartyAddress("");
+      setEmail("");
+      setStartDate(undefined);
+      toast.dismiss();
+      toast.success("Smart contract created successfully!", { id: toastId });
+    } catch (err: any) {
+      const errMsg = err?.code === "INVALID_ARGUMENT" ? "Invalid address" : "";
+      toast.error("error: " + errMsg || err || error, { id: toastId });
     }
-    // perform authentication here
   };
 
   interface props {
@@ -165,6 +151,7 @@ export default function CreateContract() {
     }
 
     function handleInputBlur() {
+      q.current = query;
       if (!isOptionClicked) {
         setIsFocused(false);
       }
@@ -183,6 +170,7 @@ export default function CreateContract() {
           ref={inputRef}
           className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-500"
           type="text"
+          required
           placeholder="Search for a car brand"
           value={q.current}
           onChange={handleInputChange}
@@ -276,14 +264,15 @@ export default function CreateContract() {
                             )}` || "address"
                           }
                           disabled={true}
-                          onChange={(event) => {
-                            setSellerEmail(event.target.value), validate();
-                          }}
+                          // onChange={(event) => {
+                          //   setSellerEmail(event.target.value), validate();
+                          // }}
                           name="email-address"
                           id="email-address"
                           className="mt-1 bg-gray-50 text-gray-500 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                         />
                       </div>
+
                       <div className="col-span-6 sm:col-span-4">
                         <label
                           htmlFor="email-address"
@@ -301,9 +290,47 @@ export default function CreateContract() {
                           }}
                           name="email-address"
                           id="email-address"
+                          onBlur={(event) => {
+                            setEmail(event.target.value), validate();
+                          }}
                           autoComplete="email"
                           className="mt-1 block w-full text-gray-500 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                         />
+                        {errors.email && (
+                          <p className="text-red-500 text-xs italic mt-2 ">
+                            {errors.email}
+                          </p>
+                        )}
+                      </div>
+                      <div className="col-span-6 sm:col-span-4">
+                        <label
+                          htmlFor="email-address"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Third party&apos;s wallet address
+                        </label>
+                        <input
+                          type="text"
+                          value={thirdPartyAddress}
+                          placeholder="address"
+                          onBlur={(event) => {
+                            setThirdPartyAddress(event.target.value),
+                              validate();
+                          }}
+                          required
+                          onChange={(event) => {
+                            setThirdPartyAddress(event.target.value),
+                              validate();
+                          }}
+                          name="third-party-address"
+                          id="third-party-address"
+                          className="mt-1 block w-full text-gray-500 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        />
+                        {errors.thirdParty && (
+                          <p className="text-red-500 text-xs italic mt-2 ">
+                            {errors.thirdParty}
+                          </p>
+                        )}
                       </div>
                       <div className="col-span-6 sm:col-span-4">
                         <label
@@ -312,17 +339,26 @@ export default function CreateContract() {
                         >
                           Car price
                         </label>
-                        <input
-                          type="number"
-                          // value={email}
-                          placeholder="0"
-                          required
-                          onChange={handlePriceChange}
-                          name="price"
-                          id="price"
-                          // autoComplete="email"
-                          className="mt-1 block w-full text-gray-500 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        />
+                        <div className="flex flex-row  items-center">
+                          <input
+                            type="number"
+                            step={0.00001}
+                            value={price}
+                            placeholder="0"
+                            required
+                            onBlur={handlePriceChange}
+                            onChange={handlePriceChange}
+                            name="price"
+                            id="price"
+                            className="mt-1 block w-1/4 text-gray-500 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm mr-4"
+                          />
+                          <div className="">MATIC</div>
+                        </div>
+                        {errors.price && (
+                          <p className="text-red-500 text-xs italic mt-2 ">
+                            {errors.price}
+                          </p>
+                        )}
                       </div>
 
                       <div className="col-span-6 sm:col-span-3">
@@ -334,82 +370,21 @@ export default function CreateContract() {
                         </label>
 
                         <CarBrandsSearch q={carBrand} />
-                      </div>
-                      <div className="col-span-6 sm:col-span-3 ">
-                        <label
-                          htmlFor="datePicker"
-                          className="block text-sm pb-2 font-medium text-gray-700"
-                        >
-                          Expiration Date
-                        </label>
-                        <div className="relative ">
-                          <div className="flex z-10 absolute inset-y-0 left-0 items-center pl-3 pointer-events-none">
-                            <svg
-                              aria-hidden="true"
-                              className="w-5 h-5 text-gray-500 dark:text-gray-400"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                                clipRule="evenodd"
-                              ></path>
-                            </svg>
-                          </div>
-
-                          <DatePicker
-                            selected={startDate}
-                            id="datePicker"
-                            onChange={(date) => setStartDate(date as Date)}
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholderText="Select date"
-                          />
-                        </div>
+                        {errors.carBrand && (
+                          <p className="text-red-500 text-xs italic mt-2 ">
+                            {errors.carBrand}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
                   <div className="backdrop-blur bg-gray-300/60 px-4 py-3 text-right sm:px-6">
-                    <button
-                      onClick={handleSubmit}
-                      className="inline-flex justify-center bg-slate-800/50 rounded-md border border-transparent  hover:bg-blue-700 text-white font-bold py-2 px-4  focus:outline-none focus:shadow-outline flex-row  items-center  "
-                      type="submit"
-                    >
-                      Create Contract
-                      {isMutating && (
-                        <div role="status">
-                          <svg
-                            aria-hidden="true"
-                            className=" ml-4 w-5  text-gray-200 animate-spin dark:text-gray-600 fill-white"
-                            viewBox="0 0 100 100"
-                            //   width={1000}
-                            height={25}
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-                              fill="currentColor"
-                            />
-                            <path
-                              d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-                              fill="currentFill"
-                            />
-                          </svg>
-                          <span className="sr-only">Loading...</span>
-                        </div>
-                      )}
-                    </button>
                     <Web3Button
                       contractAddress={WALLET_ID as string}
-                      // contractAbi={contract?.abi}
                       type="button"
                       action={async (contract) => {
-                        // await handleSubmit(contract);
                         await handleSubmit();
                       }}
-                      // onclick={(e) => e.preventDefault()}
                     >
                       Create contract
                     </Web3Button>

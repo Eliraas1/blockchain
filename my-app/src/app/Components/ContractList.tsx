@@ -35,6 +35,10 @@ function ContractList({ contracts, myId }: props) {
     contract,
     "confirmKeysDelivery"
   );
+  const { mutateAsync: confirmOwnershipTransfer } = useContractWrite(
+    contract,
+    "confirmOwnershipTransfer"
+  );
 
   useEffect(() => {
     if (appMessage) setMessage(appMessage);
@@ -52,6 +56,22 @@ function ContractList({ contracts, myId }: props) {
     } catch (err) {
       console.log("err", err);
       toast.error("Contract error!", { id: toastId });
+    }
+  };
+  const handleConfirmOwnershipTransfer = async (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    contId: string
+  ) => {
+    event.preventDefault();
+    const toastId = toast.loading("Confirm contract...");
+    try {
+      const data = await confirmOwnershipTransfer({
+        args: [contId],
+      });
+      toast.success("Contract confirm successfully!", { id: toastId });
+    } catch (err) {
+      console.log("err", err);
+      toast.error("Contract confirmation error!" + err, { id: toastId });
     }
   };
   const handleAcceptKey = async (
@@ -262,6 +282,23 @@ function ContractList({ contracts, myId }: props) {
                       </div>
                     )
                   )}
+
+                  {status === "Pending Third Party" &&
+                    cont.thirdParty === myId && (
+                      <div className=" flex place-content-center w-32 grid-cols-2 divide-x-[2px]">
+                        <div
+                          onClick={(e) => {
+                            handleConfirmOwnershipTransfer(
+                              e,
+                              cont.contractId as string
+                            );
+                          }}
+                          className="cursor-pointer font-medium pl-2 text-green-500 hover:underline"
+                        >
+                          confirm
+                        </div>
+                      </div>
+                    )}
                 </td>
               </tr>
             );

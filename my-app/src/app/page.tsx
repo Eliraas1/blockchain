@@ -13,7 +13,12 @@ import moment from "moment";
 import Link from "next/link";
 import { Tabs } from "flowbite-react";
 import ContractList from "./Components/ContractList";
-import { useAddress, useContract, useContractRead } from "@thirdweb-dev/react";
+import {
+  ConnectWallet,
+  useAddress,
+  useContract,
+  useContractRead,
+} from "@thirdweb-dev/react";
 import nextConfig from "../../next.config";
 // import ".env.local"
 // const WALLET_ID = process.env["WALLET_ID"];
@@ -29,8 +34,9 @@ interface FormErrors {
 }
 function Home() {
   const token = useAppSelector(selectUserToken);
-  const user = useAppSelector(selectUser);
+  // const user = useAppSelector(selectUser);
   const contracts = useAppSelector(selectContracts);
+  console.log({ gaga: contracts?.waiting });
   const address = useAddress();
   if (!token) redirect("/login");
 
@@ -52,6 +58,14 @@ function Home() {
                       contracts={contracts?.sending}
                       myId={address}
                     />
+                  ) : !address ? (
+                    <div className="flex flex-row items-center justify-center px-[auto]">
+                      <ConnectWallet
+                        theme="dark"
+                        btnTitle="Connect Wallet"
+                        className=" justify-center items-center self-center"
+                      />
+                    </div>
                   ) : (
                     <div className="flex-col align-center justify-center text-center">
                       <h1 className="">No contracts yet...</h1>
@@ -76,6 +90,14 @@ function Home() {
                       contracts={contracts?.receive}
                       myId={address}
                     />
+                  ) : !address ? (
+                    <div className="flex flex-row items-center justify-center px-[auto]">
+                      <ConnectWallet
+                        theme="dark"
+                        btnTitle="Connect Wallet"
+                        className=" justify-center items-center self-center"
+                      />
+                    </div>
                   ) : (
                     <h1>No contracts yet...</h1>
                   )}
@@ -88,9 +110,15 @@ function Home() {
                     <ContractList
                       contracts={contracts?.waiting}
                       myId={address}
-                      // מכין קפה ובא
-                      // מדבר בטלפון כמה דק
                     />
+                  ) : !address ? (
+                    <div className="flex flex-row items-center justify-center px-[auto]">
+                      <ConnectWallet
+                        theme="dark"
+                        btnTitle="Connect Wallet"
+                        className=" justify-center items-center self-center"
+                      />
+                    </div>
                   ) : (
                     <h1>No contracts yet...</h1>
                   )}
